@@ -12,7 +12,7 @@ export const EmptyScreen = () => {
         <ExternalLink href="https://nextjs.org">Next.js</ExternalLink>, the
         Vercel <ExternalLink href="https://sdk.vercel.ai">AI SDK</ExternalLink>,
         and the{' '}
-        <ExternalLink href="https://github.com/MKAbuMattar/ai-chatbot">
+        <ExternalLink href="https://github.com/jeasonstudio/chrome-ai">
           chrome-ai
         </ExternalLink>{' '}
         provider.
