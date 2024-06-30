@@ -38,6 +38,9 @@ import {MemoizedReactMarkdown} from '@/helpers/markdown.helper';
 // hooks
 import {useScrollAnchor} from '@/hooks/use-scroll-anchor.hook';
 
+// utils
+import {cn} from '@/utils/cn.util';
+
 const SendIcon = (props: any) => {
   return (
     <svg
@@ -73,14 +76,25 @@ const UserMessage = ({message}: {message: CoreMessage}) => {
   );
 };
 
-const BotMessage = ({message}: {message: CoreMessage}) => {
+const BotMessage = ({
+  message,
+  pending,
+}: {
+  message: CoreMessage;
+  pending?: boolean;
+}) => {
   return (
     <div className="flex items-start gap-3">
       <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src="/placeholder-user.jpg" />
         <AvatarFallback>BO</AvatarFallback>
       </Avatar>
-      <div className="max-w-[80%] rounded-lg bg-muted p-3">
+      <div
+        className={cn(
+          'max-w-[80%] rounded-lg bg-muted p-3',
+          pending ? 'duration-800 animate-pulse' : '',
+        )}
+      >
         <p className="text-sm">
           <MemoizedReactMarkdown className={'prose'}>
             {/* @ts-expect-error */}
@@ -99,11 +113,13 @@ export const ChatComponent = ({
   error: any;
   openModal: () => void;
 }) => {
+  const [loading, setLoading] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<CoreMessage[]>([]);
   const {containerRef, messagesRef, scrollToBottom} = useScrollAnchor();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    setLoading(true);
     scrollToBottom();
     e.preventDefault();
     const newMessages: CoreMessage[] = [
@@ -120,10 +136,12 @@ export const ChatComponent = ({
         prompt: newMessages.slice(-1)[0].content as string,
       });
       for await (const textPart of textStream) {
+        setLoading(false);
         setMessages([...newMessages, {role: 'assistant', content: textPart}]);
       }
     } catch (e) {
       console.error(e);
+      setLoading(false);
     }
   };
 
@@ -146,6 +164,9 @@ export const ChatComponent = ({
             <div className="mx-auto my-auto flex h-full w-full max-w-md items-center justify-center text-center">
               <EmptyScreen />
             </div>
+          )}
+          {loading && (
+            <BotMessage pending message={{role: 'assistant', content: '...'}} />
           )}
         </div>
       </div>
