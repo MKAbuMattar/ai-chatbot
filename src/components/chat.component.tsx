@@ -17,7 +17,7 @@ To read more about using these font, please visit the Next.js documentation:
 - App Directory: https://nextjs.org/docs/app/building-your-application/optimizing/fonts
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
-import {FormEvent, useState} from 'react';
+import {FormEvent, useState, KeyboardEvent} from 'react';
 
 //package
 import {CoreMessage, streamText} from 'ai';
@@ -26,7 +26,7 @@ import {InfoIcon} from 'lucide-react';
 
 // ui components
 import {Avatar, AvatarImage, AvatarFallback} from '@/components/ui/avatar';
-import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
 import {Button} from '@/components/ui/button';
 
 // components
@@ -64,10 +64,10 @@ const SendIcon = (props: any) => {
 const UserMessage = ({message}: {message: CoreMessage}) => {
   return (
     <div className="flex items-start justify-end gap-3">
-      <div className="max-w-[80%] rounded-lg bg-primary p-3 text-primary-foreground">
+      <MemoizedReactMarkdown className="max-w-[80%] rounded-lg bg-primary p-3 text-primary-foreground">
         {/* @ts-expect-error */}
-        <p className="text-sm">{message.content}</p>
-      </div>
+        {message.content}
+      </MemoizedReactMarkdown>
       <Avatar className="h-8 w-8 shrink-0">
         <AvatarImage src="/placeholder-user.jpg" />
         <AvatarFallback>US</AvatarFallback>
@@ -118,10 +118,11 @@ export const ChatComponent = ({
   const [messages, setMessages] = useState<CoreMessage[]>([]);
   const {containerRef, messagesRef, scrollToBottom} = useScrollAnchor();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e?: FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
+    if (!input.trim()) return;
     setLoading(true);
     scrollToBottom();
-    e.preventDefault();
     const newMessages: CoreMessage[] = [
       ...messages,
       {content: input, role: 'user'},
@@ -142,6 +143,13 @@ export const ChatComponent = ({
     } catch (e) {
       console.error(e);
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
@@ -177,13 +185,14 @@ export const ChatComponent = ({
         <div>
           <div className="flex space-x-2">
             <div className="relative w-full">
-              <Input
+              <Textarea
                 placeholder="Type your message..."
                 className="w-full resize-none rounded-lg pr-16"
                 disabled={error}
                 value={input}
-                min={8}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                minLength={8}
               />
               <Button
                 type="submit"
